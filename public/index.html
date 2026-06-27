@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Resume Matcher</title>
+</head>
+<body style="font-family: Arial; padding: 20px; max-width: 800px; margin: auto;">
+    <h2>Resume vs JD Analyzer</h2>
+    
+    <textarea id="resume" rows="8" cols="80" placeholder="Paste Resume Text Here..."></textarea><br><br>
+    
+    <textarea id="jd" rows="8" cols="80" placeholder="Paste Job Description Here..."></textarea><br><br>
+    
+    <button onclick="analyze()">Analyze Match</button>
+    <div id="results" style="margin-top: 20px;"></div>
+
+    <script>
+        async function analyze() {
+            const resumeText = document.getElementById('resume').value;
+            const jdText = document.getElementById('jd').value;
+            const resultsDiv = document.getElementById('results');
+            
+            resultsDiv.innerHTML = "Analyzing with Groq... (This will be fast!)";
+
+            const response = await fetch('http://localhost:3000/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ resumeText, jdText })
+            });
+
+            const data = await response.json();
+            
+            resultsDiv.innerHTML = `
+                <h3>Logic Match Score: ${data.logicScore}%</h3>
+                <p>(Matched ${data.matchedKeywords} out of ${data.totalKeywords} core keywords)</p>
+                
+                <h3>AI Missing Skills:</h3>
+                <ul>${data.aiMissingSkills.map(s => `<li>${s}</li>`).join('')}</ul>
+                
+                <h3>AI Summary:</h3>
+                <p>${data.aiSummary}</p>
+            `;
+        }
+    </script>
+</body>
+</html>
