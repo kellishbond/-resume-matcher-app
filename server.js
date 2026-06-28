@@ -36,7 +36,27 @@ app.post('/analyze', async (req, res) => {
         });
 
         // Groq returns a string, we need to parse it to JSON
-        const aiAnalysis = JSON.parse(groqResponse.choices[0].message.content);
+        // Safer JSON Parsing for AI responses
+        let aiAnalysis;
+        const rawAiContent = groqResponse.choices[0].message.content;
+
+        try {
+            // Try parsing it directly first
+            aiAnalysis = JSON.parse(rawAiContent);
+        } catch (error) {
+            // If it fails, the AI probably wrapped it in ```json ... ```
+            // This Regex extracts the JSON from inside the markdown blocks
+            const jsonMatch = rawAiContent.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+            if (jsonMatch && jsonMatch[1]) {
+                aiAnalysis = JSON.parse(jsonMatch[1]);
+            } else {
+                // Ultimate fallback if the AI completely messes up
+                aiAnalysis = {
+                    missing_skills: ["Error parsing AI response"],
+                    summary: rawAiContent.substring(0, 200)
+                };
+            }
+        }
 
         // 3. COMBINE AND SEND TO FRONTEND
         res.json({
