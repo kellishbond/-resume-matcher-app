@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <!-- 🚨 CRITICAL FOR MOBILE: Tells the phone to render at actual width -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Resume Matcher</title>
     <style>
         /* Modern Reset */
@@ -10,7 +12,7 @@
             background-color: #f4f5f7; 
             color: #333; 
             line-height: 1.6;
-            padding: 40px 20px;
+            padding: 20px 15px; /* Slightly less padding on mobile */
         }
         
         /* Main Container */
@@ -18,22 +20,26 @@
             max-width: 800px;
             margin: 0 auto;
             background: #ffffff;
-            padding: 30px;
+            padding: 25px; /* Adjusted for mobile */
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            /* Prevents long URLs from breaking the layout on small screens */
+            overflow-wrap: break-word; 
+            word-wrap: break-word;
         }
         
         h2 {
             margin-bottom: 20px;
             color: #111;
-            font-size: 24px;
+            font-size: 22px; /* Slightly smaller on mobile */
         }
 
         /* Textareas */
         textarea {
             width: 100%;
             padding: 15px;
-            font-size: 14px;
+            /* 🚨 CRITICAL FOR MOBILE: 16px prevents iOS from auto-zooming when typing */
+            font-size: 16px; 
             border: 1px solid #ddd;
             border-radius: 8px;
             margin-bottom: 20px;
@@ -47,11 +53,11 @@
 
         /* Button */
         button {
-            background-color: #111827; /* Sleek dark button */
+            background-color: #111827;
             color: white;
             border: none;
-            padding: 12px 24px;
-            font-size: 16px;
+            padding: 14px 24px; /* A bit taller for easy mobile tapping */
+            font-size: 16px;    /* Also 16px for mobile tap targets */
             border-radius: 8px;
             cursor: pointer;
             font-weight: 500;
@@ -67,14 +73,14 @@
             background: #f8fafc;
             border-left: 4px solid #007bff;
             border-radius: 4px;
-            display: none; /* Hidden until results are ready */
+            display: none;
+            font-size: 15px;
         }
-        #results h3 { margin-top: 15px; color: #111; }
+        #results h3 { margin-top: 15px; color: #111; font-size: 18px; }
         #results ul { margin-left: 20px; margin-top: 5px; }
     </style>
 </head>
 <body>
-    <!-- FIXED: Moved container inside the body tag where it belongs -->
     <div class="container">
         <h2>Resume vs JD Analyzer</h2>
         
@@ -92,7 +98,6 @@
             const jdText = document.getElementById('jd').value;
             const resultsDiv = document.getElementById('results');
             
-            // Basic validation so it doesn't crash on empty boxes
             if(!resumeText || !jdText) {
                 resultsDiv.style.display = "block";
                 resultsDiv.innerHTML = "<p style='color:red;'>Please paste both a Resume and a Job Description.</p>";
@@ -103,9 +108,6 @@
             resultsDiv.innerHTML = "Analyzing... (If the server is sleeping, this might take 30-50 seconds on the first try)";
 
             try {
-                // 🚨 CRITICAL FIX: Changed 'http://localhost:3000/analyze' to just '/analyze'
-                // When you deploy to Render, localhost doesn't exist anymore! 
-                // Using '/analyze' tells the browser to look at the current website domain.
                 const response = await fetch('/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -118,7 +120,6 @@
 
                 const data = await response.json();
                 
-                // Safely map skills in case the backend AI fails and returns nothing
                 const skillsList = (data.aiMissingSkills || []).map(s => `<li>${s}</li>`).join('');
                 
                 resultsDiv.innerHTML = `
@@ -132,7 +133,6 @@
                     <p>${data.aiSummary}</p>
                 `;
             } catch (error) {
-                // 🚨 CRITICAL FIX: Added error handling so it stops hanging forever!
                 resultsDiv.innerHTML = `<p style="color: red;">Error: ${error.message}. The server might be waking up. Please try again in 30 seconds.</p>`;
             }
         }
