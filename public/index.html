@@ -3,86 +3,88 @@
 <head>
     <title>AI Resume Matcher</title>
     <style>
-    /* Modern Reset */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { 
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-        background-color: #f4f5f7; 
-        color: #333; 
-        line-height: 1.6;
-        padding: 40px 20px;
-    }
-    
-    /* Main Container */
-    .container {
-        max-width: 800px;
-        margin: 0 auto;
-        background: #ffffff;
-        padding: 30px;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
-    
-    h2 {
-        margin-bottom: 20px;
-        color: #111;
-        font-size: 24px;
-    }
+        /* Modern Reset */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background-color: #f4f5f7; 
+            color: #333; 
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+        
+        /* Main Container */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        
+        h2 {
+            margin-bottom: 20px;
+            color: #111;
+            font-size: 24px;
+        }
 
-    /* Textareas */
-    textarea {
-        width: 100%;
-        padding: 15px;
-        font-size: 14px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        resize: vertical;
-        font-family: inherit;
-    }
-    textarea:focus {
-        outline: none;
-        border-color: #007bff;
-    }
+        /* Textareas */
+        textarea {
+            width: 100%;
+            padding: 15px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #007bff;
+        }
 
-    /* Button */
-    button {
-        background-color: #111827; /* Sleek dark button */
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        font-size: 16px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 500;
-        width: 100%;
-        transition: background 0.2s;
-    }
-    button:hover { background-color: #374151; }
+        /* Button */
+        button {
+            background-color: #111827; /* Sleek dark button */
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            width: 100%;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #374151; }
 
-    /* Results Section */
-    #results {
-        margin-top: 30px;
-        padding: 20px;
-        background: #f8fafc;
-        border-left: 4px solid #007bff;
-        border-radius: 4px;
-    }
-    #results h3 { margin-top: 15px; color: #111; }
-    #results ul { margin-left: 20px; margin-top: 5px; }
-</style>
+        /* Results Section */
+        #results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8fafc;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+            display: none; /* Hidden until results are ready */
+        }
+        #results h3 { margin-top: 15px; color: #111; }
+        #results ul { margin-left: 20px; margin-top: 5px; }
+    </style>
 </head>
-<div class="container">
-<body style="font-family: Arial; padding: 20px; max-width: 800px; margin: auto;">
-    <h2>Resume vs JD Analyzer</h2>
-    
-    <textarea id="resume" rows="8" cols="80" placeholder="Paste Resume Text Here..."></textarea><br><br>
-    
-    <textarea id="jd" rows="8" cols="80" placeholder="Paste Job Description Here..."></textarea><br><br>
-    
-    <button onclick="analyze()">Analyze Match</button>
-    <div id="results" style="margin-top: 20px;"></div>
-     </div>
+<body>
+    <!-- FIXED: Moved container inside the body tag where it belongs -->
+    <div class="container">
+        <h2>Resume vs JD Analyzer</h2>
+        
+        <textarea id="resume" rows="8" placeholder="Paste Resume Text Here..."></textarea>
+        
+        <textarea id="jd" rows="8" placeholder="Paste Job Description Here..."></textarea>
+        
+        <button onclick="analyze()">Analyze Match</button>
+        <div id="results"></div>
+    </div>
 
     <script>
         async function analyze() {
@@ -90,26 +92,49 @@
             const jdText = document.getElementById('jd').value;
             const resultsDiv = document.getElementById('results');
             
-            resultsDiv.innerHTML = "Analyzing with ai... (This will be fast!)";
+            // Basic validation so it doesn't crash on empty boxes
+            if(!resumeText || !jdText) {
+                resultsDiv.style.display = "block";
+                resultsDiv.innerHTML = "<p style='color:red;'>Please paste both a Resume and a Job Description.</p>";
+                return;
+            }
 
-            const response = await fetch('http://localhost:3000/analyze', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ resumeText, jdText })
-            });
+            resultsDiv.style.display = "block";
+            resultsDiv.innerHTML = "Analyzing... (If the server is sleeping, this might take 30-50 seconds on the first try)";
 
-            const data = await response.json();
-            
-            resultsDiv.innerHTML = `
-                <h3>Logic Match Score: ${data.logicScore}%</h3>
-                <p>(Matched ${data.matchedKeywords} out of ${data.totalKeywords} core keywords)</p>
+            try {
+                // 🚨 CRITICAL FIX: Changed 'http://localhost:3000/analyze' to just '/analyze'
+                // When you deploy to Render, localhost doesn't exist anymore! 
+                // Using '/analyze' tells the browser to look at the current website domain.
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resumeText, jdText })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                const data = await response.json();
                 
-                <h3>AI Missing Skills:</h3>
-                <ul>${data.aiMissingSkills.map(s => `<li>${s}</li>`).join('')}</ul>
+                // Safely map skills in case the backend AI fails and returns nothing
+                const skillsList = (data.aiMissingSkills || []).map(s => `<li>${s}</li>`).join('');
                 
-                <h3>AI Summary:</h3>
-                <p>${data.aiSummary}</p>
-            `;
+                resultsDiv.innerHTML = `
+                    <h3>Logic Match Score: ${data.logicScore}%</h3>
+                    <p>(Matched ${data.matchedKeywords} out of ${data.totalKeywords} core keywords)</p>
+                    
+                    <h3>AI Missing Skills:</h3>
+                    <ul>${skillsList || '<li>None identified</li>'}</ul>
+                    
+                    <h3>AI Summary:</h3>
+                    <p>${data.aiSummary}</p>
+                `;
+            } catch (error) {
+                // 🚨 CRITICAL FIX: Added error handling so it stops hanging forever!
+                resultsDiv.innerHTML = `<p style="color: red;">Error: ${error.message}. The server might be waking up. Please try again in 30 seconds.</p>`;
+            }
         }
     </script>
 </body>
